@@ -15,7 +15,7 @@ const { width } = Dimensions.get("window");
 
 const HomeScreen = ({ route }) => {
   const navigation = useNavigation();
-  const { role = "member" } = route.params || {};
+  const { role = "Member" } = route.params || {};
 
   const renderAdminDashboard = () => (
     <>
@@ -148,9 +148,18 @@ const HomeScreen = ({ route }) => {
       </View>
 
       {/* Role-based Dashboard */}
-      {role.toLowerCase() === "admin" && renderAdminDashboard()}
-      {role.toLowerCase() === "trainer" && renderTrainerDashboard()}
-      {role.toLowerCase() === "member" && renderMemberDashboard()}
+      <ScrollView style={styles.container}>
+  {(() => {
+    switch(role.toLowerCase()) {
+      case "admin":
+        return renderAdminDashboard();
+      case "trainer":
+        return renderTrainerDashboard();
+      default:
+        return renderMemberDashboard();
+    }
+  })()}
+</ScrollView>
 
       {/* Footer */}
       <View style={styles.footer}>

@@ -83,6 +83,7 @@ const DrawerNavigator = ({ route }) => {
       <Drawer.Screen 
         name="Home" 
         component={HomeScreen}
+        initialParams={{ role }}
       />
       <Drawer.Screen 
         name="Profile" 
