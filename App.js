@@ -1,6 +1,8 @@
 import React from "react";
 import { StatusBar } from "react-native";
-import AppNavigator from "./src/AppNavigator"; // Import the corrected AppNavigator  
+import { registerRootComponent } from "expo"; // Import registerRootComponent for root registration
+import AppNavigator from "./src/AppNavigator"; // Ensure AppNavigator path is correct
+import { auth } from './src/config/firebaseConfig';
 
 const App = () => {
   return (
@@ -16,5 +18,8 @@ const App = () => {
     </>
   );
 };
+
+// Register the component as the app's root
+registerRootComponent(App);
 
 export default App;
