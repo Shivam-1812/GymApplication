@@ -1,87 +1,55 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createDrawerNavigator } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerItem } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Import screens
 import LoginScreen from './screens/Login';
-import HomeScreen from './screens/HomeScreen';
+
 import SettingsScreen from './screens/Setting';
 import ProfileScreen from './screens/Profile';
+import AdminDashboard from './screens/AdminDashboard';
+import TrainerDashboard from './screens/TrainerDashboard';
+import MemberDashboard from './screens/MemberDashboard';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
 const Tab = createBottomTabNavigator();
 
+// Custom Drawer Content Component
+const CustomDrawerContent = (props) => {
+  const { role } = props;
+  return (
+    <DrawerContentScrollView {...props}>
+      <View style={styles.drawerHeader}>
+        <Text style={styles.drawerHeaderText}>GymPro</Text>
+        <Text style={styles.roleText}>{role ? role.charAt(0).toUpperCase() + role.slice(1) : 'Member'}</Text>
+      </View>
+      <DrawerItemList {...props} />
+      <DrawerItem
+        label="Logout"
+        icon={({ color, size }) => <Icon name="logout" size={size} color={color} />}
+        onPress={() => props.navigation.reset({
+          index: 0,
+          routes: [{ name: 'Login' }],
+        })}
+      />
+    </DrawerContentScrollView>
+  );
+};
+
 // Role-specific tab navigators
-const MemberTabs = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ color, size }) => {
-        let iconName;
-        switch (route.name) {
-          case 'Home':
-            iconName = 'home';
-            break;
-          case 'Profile':
-            iconName = 'person';
-            break;
-          case 'Workouts':
-            iconName = 'fitness-center';
-            break;
-          default:
-            iconName = 'circle';
-        }
-        return <Icon name={iconName} size={size} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="Home" component={HomeScreen} />
-    <Tab.Screen name="Workouts" component={HomeScreen} />
-    <Tab.Screen name="Profile" component={ProfileScreen} />
-  </Tab.Navigator>
-);
-
-const TrainerTabs = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ color, size }) => {
-        let iconName;
-        switch (route.name) {
-          case 'Home':
-            iconName = 'home';
-            break;
-          case 'Schedule':
-            iconName = 'schedule';
-            break;
-          case 'Clients':
-            iconName = 'group';
-            break;
-          default:
-            iconName = 'circle';
-        }
-        return <Icon name={iconName} size={size} color={color} />;
-      },
-    })}
-  >
-    <Tab.Screen name="Home" component={HomeScreen} />
-    <Tab.Screen name="Schedule" component={HomeScreen} />
-    <Tab.Screen name="Clients" component={HomeScreen} />
-  </Tab.Navigator>
-);
-
 const AdminTabs = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ color, size }) => {
         let iconName;
         switch (route.name) {
-          case 'Home':
-            iconName = 'home';
+          case 'Dashboard':
+            iconName = 'dashboard';
             break;
           case 'Members':
             iconName = 'group';
@@ -94,90 +62,95 @@ const AdminTabs = () => (
         }
         return <Icon name={iconName} size={size} color={color} />;
       },
+      tabBarActiveTintColor: '#1a73e8',
+      tabBarInactiveTintColor: 'gray',
     })}
   >
-    <Tab.Screen name="Home" component={HomeScreen} />
-    <Tab.Screen name="Members" component={HomeScreen} />
-    <Tab.Screen name="Reports" component={HomeScreen} />
+    <Tab.Screen name="Dashboard" component={AdminDashboard} />
+    <Tab.Screen name="Members" component={AdminDashboard} />
+    <Tab.Screen name="Reports" component={AdminDashboard} />
   </Tab.Navigator>
 );
 
-// Custom Drawer Content
-const CustomDrawerContent = ({ navigation, role }) => {
-  const getNavigationItems = (userRole) => {
-    const commonItems = ["Home", "Profile", "Contact Us", "Logout", "Settings"];
-    const roleSpecificItems = {
-      admin: ["Membership Plans", "Employee Management", "Reports", "Financial Overview"],
-      trainer: ["My Schedule", "Client Management", "Workout Plans", "Performance Tracking"],
-      member: ["My Workouts", "Book Session", "Progress Tracker", "Membership Details"],
-    };
-    return [...commonItems, ...(roleSpecificItems[userRole.toLowerCase()] || [])];
-  };
+const TrainerTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+        switch (route.name) {
+          case 'Dashboard':
+            iconName = 'dashboard';
+            break;
+          case 'Schedule':
+            iconName = 'schedule';
+            break;
+          case 'Clients':
+            iconName = 'group';
+            break;
+          default:
+            iconName = 'circle';
+        }
+        return <Icon name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#1a73e8',
+      tabBarInactiveTintColor: 'gray',
+    })}
+  >
+    <Tab.Screen name="Dashboard" component={TrainerDashboard} />
+    <Tab.Screen name="Schedule" component={TrainerDashboard} />
+    <Tab.Screen name="Clients" component={TrainerDashboard} />
+  </Tab.Navigator>
+);
 
-  return (
-    <View style={styles.drawerContainer}>
-      <View style={styles.drawerHeader}>
-        <Image
-          source={{ uri: "https://via.placeholder.com/50" }}
-          style={styles.profileImage}
-        />
-        <Text style={styles.drawerLogo}>GymPro</Text>
-        <Text style={styles.roleText}>{role?.toUpperCase()}</Text>
-      </View>
-      {getNavigationItems(role).map((item, index) => (
-        <TouchableOpacity
-          key={index}
-          style={styles.drawerItem}
-          onPress={() => {
-            switch (item) {
-              case 'Logout':
-                navigation.navigate('Login');
-                break;
-              case 'Settings':
-                navigation.navigate('Settings');
-                break;
-              case 'Profile':
-                navigation.navigate('Profile');
-                break;
-              case 'Home':
-                navigation.navigate('MainTabs');
-                break;
-              default:
-                console.log('Navigate to', item);
-            }
-          }}
-        >
-          <Text style={styles.drawerItemText}>{item}</Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
+const MemberTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ color, size }) => {
+        let iconName;
+        switch (route.name) {
+          case 'Dashboard':
+            iconName = 'dashboard';
+            break;
+          case 'Workouts':
+            iconName = 'fitness-center';
+            break;
+          case 'Profile':
+            iconName = 'person';
+            break;
+          default:
+            iconName = 'circle';
+        }
+        return <Icon name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#1a73e8',
+      tabBarInactiveTintColor: 'gray',
+    })}
+  >
+    <Tab.Screen name="Dashboard" component={MemberDashboard} />
+    <Tab.Screen name="Workouts" component={MemberDashboard} />
+    <Tab.Screen name="Profile" component={ProfileScreen} />
+  </Tab.Navigator>
+);
 
 // Main content with role-based tabs
 const MainContent = ({ route }) => {
   const { role } = route.params || {};
   
-  let TabNavigator;
   switch (role?.toLowerCase()) {
     case 'admin':
-      TabNavigator = AdminTabs;
-      break;
+      return <AdminTabs />;
     case 'trainer':
-      TabNavigator = TrainerTabs;
-      break;
+      return <TrainerTabs />;
     default:
-      TabNavigator = MemberTabs;
+      return <MemberTabs />;
   }
-  
-  return <TabNavigator />;
 };
 
 // Drawer navigator for authenticated screens
 const DrawerNavigator = ({ route }) => {
   const { role } = route.params || {};
   return (
-    <Drawer.Navigator 
+    <Drawer.Navigator
       initialRouteName="MainTabs"
       drawerContent={(props) => <CustomDrawerContent {...props} role={role} />}
       screenOptions={{
@@ -202,10 +175,22 @@ const DrawerNavigator = ({ route }) => {
       <Drawer.Screen 
         name="Profile" 
         component={ProfileScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: '#1a73e8',
+          },
+          headerTintColor: '#fff',
+        }}
       />
       <Drawer.Screen 
         name="Settings" 
         component={SettingsScreen}
+        options={{
+          headerStyle: {
+            backgroundColor: '#1a73e8',
+          },
+          headerTintColor: '#fff',
+        }}
       />
     </Drawer.Navigator>
   );
@@ -232,40 +217,19 @@ const AppNavigator = () => {
 };
 
 const styles = StyleSheet.create({
-  drawerContainer: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
   drawerHeader: {
     padding: 20,
     backgroundColor: '#1a73e8',
-    alignItems: 'center',
   },
-  profileImage: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    marginBottom: 10,
-  },
-  drawerLogo: {
-    fontSize: 24,
-    fontWeight: 'bold',
+  drawerHeaderText: {
     color: '#fff',
-    marginBottom: 5,
+    fontSize: 22,
+    fontWeight: 'bold',
   },
   roleText: {
-    fontSize: 16,
     color: '#fff',
-    opacity: 0.9,
-  },
-  drawerItem: {
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e3e6',
-  },
-  drawerItemText: {
     fontSize: 16,
-    color: '#202124',
+    marginTop: 5,
   },
 });
 
