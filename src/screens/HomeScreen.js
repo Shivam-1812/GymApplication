@@ -7,10 +7,8 @@ import {
   TouchableOpacity,
   StatusBar,
   Dimensions,
-  ImageBackground,
   Animated,
   RefreshControl,
-  Platform,
 } from "react-native";
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import { LineChart } from 'react-native-chart-kit';
@@ -51,13 +49,13 @@ const themes = {
 const HomeScreen = ({ route, navigation }) => {
   const { role = "member" } = route.params || {};
   const theme = themes[role.toLowerCase()] || themes.member;
-  
+
   // Animation values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const scaleAnim = useRef(new Animated.Value(0.95)).current;
   const rotateAnim = useRef(new Animated.Value(0)).current;
-  
+
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([
@@ -413,7 +411,6 @@ const getStatsForRole = (role) => {
       ];
   }
 };
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,

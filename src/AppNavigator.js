@@ -14,6 +14,7 @@ import ProfileScreen from './screens/Profile';
 import AdminDashboard from './screens/AdminDashboard';
 import TrainerDashboard from './screens/TrainerDashboard';
 import MemberDashboard from './screens/MemberDashboard';
+import ClassBooking from './screens/ClassBooking';  
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -127,7 +128,7 @@ const MemberTabs = () => (
     })}
   >
     <Tab.Screen name="Dashboard" component={MemberDashboard} />
-    <Tab.Screen name="Workouts" component={MemberDashboard} />
+    <Tab.Screen name="Workouts" component={ClassBooking} />
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
 );

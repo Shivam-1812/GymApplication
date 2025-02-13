@@ -5,18 +5,23 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { auth, db } from '../config/firebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [selectedRole, setSelectedRole] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [name, setName] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const roles = [
     { id: 'admin', title: 'Admin', icon: 'admin-panel-settings' },
@@ -24,7 +29,7 @@ const LoginScreen = ({ navigation }) => {
     { id: 'member', title: 'Member', icon: 'person' },
   ];
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
     if (!selectedRole) {
       alert('Please select a role');
       return;
@@ -33,10 +38,39 @@ const LoginScreen = ({ navigation }) => {
       alert('Please enter both email and password');
       return;
     }
-    // Add your authentication logic here
-    
-    // For now, we'll just navigate to the main app
-    navigation.navigate('MainApp', { role: selectedRole });
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      navigation.navigate('MainApp', { role: selectedRole });
+    } catch (error) {
+      alert(error.message);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      alert('Please fill all fields');
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return;
+    }
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Save user info to Firestore
+      await setDoc(doc(db, 'users', user.uid), {
+        name,
+        email,
+        role: selectedRole || 'member', // Default role
+      });
+
+      alert('User registered successfully!');
+      setIsSignUp(false);
+    } catch (error) {
+      alert(error.message);
+    }
   };
 
   return (
@@ -76,6 +110,20 @@ const LoginScreen = ({ navigation }) => {
           ))}
         </View>
 
+        {isSignUp && (
+          <View style={styles.inputContainer}>
+            <View style={styles.inputWrapper}>
+              <Icon name="person" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Name"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+          </View>
+        )}
+
         <View style={styles.inputContainer}>
           <View style={styles.inputWrapper}>
             <Icon name="email" size={20} color="#666" style={styles.inputIcon} />
@@ -110,15 +158,49 @@ const LoginScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.forgotPassword}>
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-          </TouchableOpacity>
+          {isSignUp && (
+            <View style={styles.inputWrapper}>
+              <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
+              <TextInput
+                style={styles.input}
+                placeholder="Confirm Password"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                secureTextEntry={!showPassword}
+              />
+              <TouchableOpacity 
+                onPress={() => setShowPassword(!showPassword)}
+                style={styles.passwordIcon}
+              >
+                <Icon 
+                  name={showPassword ? 'visibility-off' : 'visibility'} 
+                  size={20} 
+                  color="#666" 
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {!isSignUp && (
+            <TouchableOpacity style={styles.forgotPassword}>
+              <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity 
             style={styles.loginButton}
-            onPress={handleLogin}
+            onPress={isSignUp ? handleSignUp : handleLogin}
           >
-            <Text style={styles.loginButtonText}>Login</Text>
+            <Text style={styles.loginButtonText}>{isSignUp ? 'Sign Up' : 'Login'}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.toggleLink}
+            onPress={() => setIsSignUp(!isSignUp)}
+          >
+            <Text style={styles.toggleLinkText}>
+              {isSignUp ? 'Already have an account? Login' : "Don't have an account? Sign Up"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -210,6 +292,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  toggleLink: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  toggleLinkText: {
+    color: '#1a73e8',
+    fontSize: 14,
   },
 });
 
