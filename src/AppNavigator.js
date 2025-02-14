@@ -8,13 +8,14 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 
 // Import screens
 import LoginScreen from './screens/Login';
-
 import SettingsScreen from './screens/Setting';
 import ProfileScreen from './screens/Profile';
 import AdminDashboard from './screens/AdminDashboard';
 import TrainerDashboard from './screens/TrainerDashboard';
 import MemberDashboard from './screens/MemberDashboard';
-import ClassBooking from './screens/ClassBooking';  
+import ClassBooking from './screens/ClassBooking';
+import FitnessTracking from './screens/FitnessTracking';
+import MembershipManagement from './screens/MembershipManagement';
 
 const Stack = createStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -53,10 +54,10 @@ const AdminTabs = () => (
             iconName = 'dashboard';
             break;
           case 'Members':
-            iconName = 'group';
+            iconName = 'people';
             break;
           case 'Reports':
-            iconName = 'assessment';
+            iconName = 'bar-chart';
             break;
           default:
             iconName = 'circle';
@@ -115,6 +116,9 @@ const MemberTabs = () => (
           case 'Workouts':
             iconName = 'fitness-center';
             break;
+          case 'Membership':
+            iconName = 'card-membership';
+            break;
           case 'Profile':
             iconName = 'person';
             break;
@@ -125,112 +129,106 @@ const MemberTabs = () => (
       },
       tabBarActiveTintColor: '#1a73e8',
       tabBarInactiveTintColor: 'gray',
+      headerStyle: {
+        backgroundColor: '#1a73e8',
+      },
+      headerTintColor: '#fff',
     })}
   >
     <Tab.Screen name="Dashboard" component={MemberDashboard} />
-    <Tab.Screen name="Workouts" component={ClassBooking} />
+    <Tab.Screen 
+      name="Workouts" 
+      component={ClassBooking}
+      options={{
+        title: 'Class Bookings'
+      }}
+    />
+    <Tab.Screen 
+      name="Membership" 
+      component={MembershipManagement}
+      options={{
+        title: 'Memberships'
+      }}
+    />
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
 );
 
-// Main content with role-based tabs
-const MainContent = ({ route }) => {
-  const { role } = route.params || {};
-  
-  switch (role?.toLowerCase()) {
-    case 'admin':
-      return <AdminTabs />;
-    case 'trainer':
-      return <TrainerTabs />;
-    default:
-      return <MemberTabs />;
-  }
-};
-
-// Drawer navigator for authenticated screens
 const DrawerNavigator = ({ route }) => {
   const { role } = route.params || {};
   return (
     <Drawer.Navigator
-      initialRouteName="MainTabs"
       drawerContent={(props) => <CustomDrawerContent {...props} role={role} />}
       screenOptions={{
-        headerShown: true,
+        headerStyle: {
+          backgroundColor: '#1a73e8',
+        },
+        headerTintColor: '#fff',
         drawerStyle: {
-          width: 280,
+          backgroundColor: '#fff',
         },
       }}
     >
-      <Drawer.Screen 
-        name="MainTabs" 
-        component={MainContent}
-        initialParams={{ role }}
-        options={{ 
-          title: 'GymPro',
-          headerStyle: {
-            backgroundColor: '#1a73e8',
-          },
-          headerTintColor: '#fff',
-        }}
-      />
-      <Drawer.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{
-          headerStyle: {
-            backgroundColor: '#1a73e8',
-          },
-          headerTintColor: '#fff',
-        }}
-      />
-      <Drawer.Screen 
-        name="Settings" 
-        component={SettingsScreen}
-        options={{
-          headerStyle: {
-            backgroundColor: '#1a73e8',
-          },
-          headerTintColor: '#fff',
-        }}
-      />
+      {role === 'admin' ? (
+        <Drawer.Screen 
+          name="Admin" 
+          component={AdminTabs}
+          options={{
+            title: 'Admin Dashboard'
+          }}
+        />
+      ) : role === 'trainer' ? (
+        <Drawer.Screen 
+          name="Trainer" 
+          component={TrainerTabs}
+          options={{
+            title: 'Trainer Dashboard'
+          }}
+        />
+      ) : (
+        <Drawer.Screen 
+          name="Member" 
+          component={MemberTabs}
+          options={{
+            title: 'Member Dashboard'
+          }}
+        />
+      )}
+      <Drawer.Screen name="Settings" component={SettingsScreen} />
     </Drawer.Navigator>
   );
 };
 
-// Main navigator
-const AppNavigator = () => {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen 
-          name="Login" 
-          component={LoginScreen}
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="MainApp" 
-          component={DrawerNavigator}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
-  );
-};
+const AppNavigator = () => (
+  <NavigationContainer>
+    <Stack.Navigator 
+      initialRouteName="Login"
+      screenOptions={{
+        headerShown: false
+      }}
+    >
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="MainApp" component={DrawerNavigator} />
+      <Stack.Screen name="FitnessTracking" component={FitnessTracking} />
+      <Stack.Screen name="MembershipManagement" component={MembershipManagement} />
+    </Stack.Navigator>
+  </NavigationContainer>
+);
 
 const styles = StyleSheet.create({
   drawerHeader: {
-    padding: 20,
+    padding: 16,
     backgroundColor: '#1a73e8',
   },
   drawerHeaderText: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   roleText: {
     color: '#fff',
-    fontSize: 16,
-    marginTop: 5,
+    fontSize: 14,
+    marginTop: 4,
   },
 });
 
