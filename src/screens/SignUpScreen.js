@@ -1,210 +1,70 @@
-import React, { useState } from 'react';
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { auth, db } from '../config/firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
+import React, { useState } from "react";
+import { View, StyleSheet, Alert, KeyboardAvoidingView } from "react-native";
+import { Text, TextInput, Button, RadioButton } from "react-native-paper";
+import { register } from "../api/api";
 
 const SignUpScreen = ({ navigation }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState("member"); // Default role
+  const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async () => {
-    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
-      alert('Please fill all fields');
-      return;
-    }
-    if (password !== confirmPassword) {
-      alert('Passwords do not match');
+  const handleRegister = async () => {
+    if (!firstName || !lastName || !email || !password) {
+      Alert.alert("Error", "All fields are required.");
       return;
     }
 
+    setLoading(true);
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
-
-      // Save user info to Firestore
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-        role: 'member', // Default role
-      });
-
-      alert('User registered successfully!');
-      navigation.navigate('Login');
+      const userData = { firstName, lastName, email, password, role };
+      await register(userData);
+      Alert.alert("Success", "Registration Successful! You can now log in.");
+      navigation.replace("Login");
     } catch (error) {
-      alert(error.message);
+      Alert.alert("Registration Failed", error.message || "Something went wrong.");
     }
+    setLoading(false);
   };
 
   return (
-    <KeyboardAvoidingView 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={styles.container}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.logoContainer}>
-          <Text style={styles.logoText}>GymPro</Text>
+    <KeyboardAvoidingView behavior="padding" style={styles.container}>
+      <Text style={styles.title}>Sign Up</Text>
+
+      <TextInput label="First Name" mode="outlined" value={firstName} onChangeText={setFirstName} style={styles.input} />
+      <TextInput label="Last Name" mode="outlined" value={lastName} onChangeText={setLastName} style={styles.input} />
+      <TextInput label="Email" mode="outlined" value={email} onChangeText={setEmail} style={styles.input} />
+      <TextInput label="Password" mode="outlined" value={password} onChangeText={setPassword} secureTextEntry style={styles.input} />
+
+      <Text style={styles.label}>Select Role</Text>
+      <RadioButton.Group onValueChange={setRole} value={role}>
+        <View style={styles.radioContainer}>
+          <RadioButton.Item label="Member" value="member" />
+          <RadioButton.Item label="Trainer" value="trainer" />
+          <RadioButton.Item label="Admin" value="admin" />
         </View>
+      </RadioButton.Group>
 
-        <View style={styles.inputContainer}>
-          <View style={styles.inputWrapper}>
-            <Icon name="person" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Name"
-              value={name}
-              onChangeText={setName}
-            />
-          </View>
+      <Button mode="contained" onPress={handleRegister} loading={loading} style={styles.button}>
+        Sign Up
+      </Button>
 
-          <View style={styles.inputWrapper}>
-            <Icon name="email" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Password"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity 
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.passwordIcon}
-            >
-              <Icon 
-                name={showPassword ? 'visibility-off' : 'visibility'} 
-                size={20} 
-                color="#666" 
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.inputWrapper}>
-            <Icon name="lock" size={20} color="#666" style={styles.inputIcon} />
-            <TextInput
-              style={styles.input}
-              placeholder="Confirm Password"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry={!showPassword}
-            />
-            <TouchableOpacity 
-              onPress={() => setShowPassword(!showPassword)}
-              style={styles.passwordIcon}
-            >
-              <Icon 
-                name={showPassword ? 'visibility-off' : 'visibility'} 
-                size={20} 
-                color="#666" 
-              />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity 
-            style={styles.signUpButton}
-            onPress={handleSignUp}
-          >
-            <Text style={styles.signUpButtonText}>Sign Up</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.loginLink}
-            onPress={() => navigation.navigate('Login')}
-          >
-            <Text style={styles.loginLinkText}>Already have an account? Login</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+      <Button mode="text" onPress={() => navigation.navigate("Login")}>
+        Already have an account? Login
+      </Button>
     </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  logoContainer: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1a73e8',
-  },
-  inputContainer: {
-    width: '100%',
-  },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  passwordIcon: {
-    padding: 10,
-  },
-  signUpButton: {
-    backgroundColor: '#1a73e8',
-    padding: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  signUpButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loginLink: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  loginLinkText: {
-    color: '#1a73e8',
-    fontSize: 14,
-  },
+  container: { flex: 1, justifyContent: "center", padding: 20 },
+  title: { fontSize: 28, fontWeight: "bold", textAlign: "center", marginBottom: 20 },
+  input: { marginBottom: 10 },
+  label: { fontSize: 16, fontWeight: "bold", marginTop: 10 },
+  radioContainer: { flexDirection: "row", justifyContent: "space-around", marginBottom: 10 },
+  button: { marginTop: 10 },
 });
 
 export default SignUpScreen;
